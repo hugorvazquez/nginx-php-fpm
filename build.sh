@@ -8,10 +8,12 @@ fi
 if [ $tag != 'latest' ]
 then
   echo 'Build from tag'
-  docker build -f src/docker/${tag}/Dockerfile -t jkaninda/nginx-php-fpm:$tag .
+  docker build -f src/docker/${tag}/Dockerfile -t hugorvazquez/nginx-php-fpm:$tag .
 else
  echo 'Build latest'
- docker build -f src/docker/8.3/Dockerfile -t jkaninda/nginx-php-fpm:$tag .
- 
+ docker build -f src/docker/8.3/Dockerfile -t hugorvazquez/nginx-php-fpm:$tag .
+
 fi
-docker compose up -d --force-recreate
+#docker compose up -d --force-recreate
+echo ""
+echo "docker push hugorvazquez/nginx-php-fpm:$tag"

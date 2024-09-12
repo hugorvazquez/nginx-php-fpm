@@ -20,39 +20,6 @@ fatal() {
     echo '[ERROR] ' "$@" >&2
     exit 1
 }
-## Check if the artisan file exists
-if [ -f /var/www/html/artisan ]; then
-    info "Artisan file found, creating laravel supervisor config"
-    # Set DocumentRoot to the Laravel project directory
-    export DOCUMENT_ROOT=/var/www/html/public
-    ##Create Laravel Scheduler process
-    TASK=/etc/supervisor/conf.d/laravel-worker.conf
-    touch $TASK
-    cat > "$TASK" <<EOF
-    [program:Laravel-scheduler]
-    process_name=%(program_name)s_%(process_num)02d
-    command=/bin/sh -c "while [ true ]; do (php /var/www/html/artisan schedule:run --verbose --no-interaction &); sleep 60; done"
-    autostart=true
-    autorestart=true
-    numprocs=1
-    user=$USER_NAME
-    stdout_logfile=/var/log/laravel_scheduler.out.log
-    redirect_stderr=true
-    
-    [program:Laravel-worker]
-    process_name=%(program_name)s_%(process_num)02d
-    command=php /var/www/html/artisan queue:work --sleep=3 --tries=3
-    autostart=true
-    autorestart=true
-    numprocs=$LARAVEL_PROCS_NUMBER
-    user=$USER_NAME
-    redirect_stderr=true
-    stdout_logfile=/var/log/laravel_worker.log
-EOF
-  info  "Laravel supervisor config created"
-else
-    info  "artisan file not found"
-fi
 
 # Enable custom nginx config files if they exist
 if [ -f /var/www/html/conf/nginx/nginx.conf ]; then
@@ -74,13 +41,13 @@ if [ -f /var/www/html/conf/nginx/nginx-site.conf ]; then
    touch $TASK
    cat > "$TASK"  <<EOF
    server {
-    listen 80 default_server;
-    listen [::]:80 default_server;  
+    listen 8080 default_server;
+    listen [::]:8080 default_server;
     server_name $DOMAIN;
     # Add index.php to setup Nginx, PHP & PHP-FPM config
     index index.php index.html index.htm index.nginx-debian.html;
-    error_log  /var/log/nginx/error.log;
-    access_log /var/log/nginx/access.log;
+    error_log  /dev/stderr;
+    access_log /dev/stdout combined;
     root $DOCUMENT_ROOT;
     # pass PHP scripts on Nginx to FastCGI (PHP-FPM) server
     location ~ \.php$ {
@@ -92,13 +59,13 @@ if [ -f /var/www/html/conf/nginx/nginx-site.conf ]; then
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_param PATH_INFO \$fastcgi_path_info;
-        
+
     }
     client_max_body_size $CLIENT_MAX_BODY_SIZE;
     server_tokens off;
 
-     # Hide PHP headers 
-    fastcgi_hide_header X-Powered-By; 
+     # Hide PHP headers
+    fastcgi_hide_header X-Powered-By;
     fastcgi_hide_header X-CF-Powered-By;
     fastcgi_hide_header X-Runtime;
 
@@ -112,7 +79,7 @@ if [ -f /var/www/html/conf/nginx/nginx-site.conf ]; then
     location ~ \.js {
     add_header  Content-Type    application/x-javascript;
     }
-  # deny access to Apache .htaccess on Nginx with PHP, 
+  # deny access to Apache .htaccess on Nginx with PHP,
   # if Apache and Nginx document roots concur
   location ~ /\.ht    {deny all;}
 	location ~ /\.svn/  {deny all;}
@@ -129,4 +96,3 @@ if [ -f /var/www/html/conf/worker/supervisor.conf ]; then
 fi
 ## Start Supervisord
 supervisord -c /etc/supervisor/supervisord.conf
-

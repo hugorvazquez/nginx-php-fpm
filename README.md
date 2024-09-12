@@ -46,8 +46,8 @@ services:
     app:
         image: jkaninda/nginx-php-fpm:8.3
         container_name: my-app
-        restart: unless-stopped 
-        user: www-data # Optional - for production usage    
+        restart: unless-stopped
+        user: www-data # Optional - for production usage
         volumes:
         #Project root
             - ./:/var/www/html
@@ -76,9 +76,9 @@ services:
     app:
         image: jkaninda/nginx-php-fpm
         container_name: nginx-fpm
-        restart: unless-stopped 
+        restart: unless-stopped
         ports:
-           - "80:80"    
+           - "80:80"
         volumes:
         #Project root
             - ./:/var/www/html
@@ -86,11 +86,10 @@ services:
              #./php.ini:/usr/local/etc/php/conf.d/php.ini # Optional, your custom php init file
         environment:
            - APP_ENV=development # Optional, or production
-           - LARAVEL_PROCS_NUMBER=2 # Optional, Laravel queue:work process number
            #- CLIENT_MAX_BODY_SIZE=20M # Optional
            #- DOMAIN=example.com # Optional
            - DOCUMENT_ROOT=/var/www/html #Optional
- 
+
 ```
 Default web root:
 ```
@@ -153,7 +152,7 @@ stdout_logfile=/var/www/html/storage/logs/kafka.log
 
 ### Storage permision issue
 ```sh
- docker-compose exec php-fpm /bin/bash 
+ docker-compose exec php-fpm /bin/bash
  ```
 ```sh
 chown -R www-data:www-data /var/www/html/
